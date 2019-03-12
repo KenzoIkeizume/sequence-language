@@ -1,0 +1,41 @@
+{
+  "inputs_production_rules": [
+    "S->XY",
+    "X->XaA|XbB|F",
+    "Aa->aA",
+    "Ab->bA",
+    "AY->Ya",
+    "Ba->aB",
+    "Bb->bB",
+    "BY->Yb",
+    "Fa->aF",
+    "Fb->bF",
+    "FY->&"
+  ],
+  "input_values": [
+    1,
+    2,
+    7,
+    3,
+    8,
+    10,
+    4,
+    12,
+    11,
+    13
+  ],
+  "variables": [
+    "S",
+    "X",
+    "Y",
+    "A",
+    "B",
+    "F"
+  ],
+  "alphabet": [
+    "a",
+    "b"
+  ],
+  "initial_variable": "S",
+  "target_variable": "baba"
+}
