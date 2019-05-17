@@ -1,73 +1,99 @@
 import json
+from enum import Enum
 
 from DataStructure.graph import Graph
+
+
+class State(Enum):
+    MARKED = 1
+    UNMARKED = 2
+    WAIT = 3
 
 
 class Language:
     def __init__(self, archive: str = "inputs.json"):
 
+        self.graph = Graph()
+        self.table = {}
+        self.unmarked_path = []
+
+        # read the json file
         archive = open(archive, "r")
         data = json.load(archive)
 
-        self.inputs_production_rules = data["inputs_production_rules"]
-        self.input_values = data["input_values"]
-        self.variables = data["variables"]
         self.alphabet = data["alphabet"]
-        self.initial_variable = data["initial_variable"]
-        self.target_variable = data["target_variable"]
+        self.nodes = data["nodes"]
+        self.linked_edges = data["&"]
+        self.initial_node = data["initial_node"]
+        self.final_nodes = data["final_nodes"]
 
-        self.production_rules = []
+        self.mount_graph()
 
-    def generate_product_rules(self):
-        for production_rule in self.inputs_production_rules:
-            key, array_values = production_rule.split("->")
-            values = array_values.split("|")
+    def mount_graph(self):
+        # add nodes
+        for node_name in self.nodes:
+            self.graph.add_node(node_name=node_name)
 
-            for value in values:
-                if value == "&":
-                    value = ""
-                self.production_rules.append({key: value})
+        # add edges
+        for node in self.graph.nodes:
+            list_edges = self.linked_edges[node.name]
 
-        print("production_rules: ", self.production_rules)
+            for edge_obj in list_edges:
+                key = list(edge_obj.keys())[0]
+                value = list(edge_obj.values())[0]
 
-    def generate_sequence_language(self):
-        replaced_value = self.initial_variable
+                target_node = self.graph.find_node(key)
 
-        for input_value in self.input_values:
-            current_value = self.production_rules[input_value - 1]
-            print("current_value: ", current_value)
+                node.add_edge(target_node, value)
 
-            variable = list(current_value.keys())[0]
-            value = list(current_value.values())[0]
+    def minimization_table(self):
+        self.generate_table()
+        self.reverse_final()
 
-            replaced_value = replaced_value.replace(variable, value, 1)
-            print("replaced_value: ", replaced_value)
+    def generate_table(self):
+        # loop in nodes to mount the table
+        for line in range(0, len(self.nodes)-1):
+            for column in range(1+line, len(self.nodes)):
+                line_name = self.nodes[line]
+                column_name = self.nodes[column]
 
-    def generate_language_sequence(self):
-        graph = Graph(self.production_rules)
+                position_table = line_name+column_name
 
-        graph.breadth_first_search(self.initial_variable, self.target_variable)
+                self.table[position_table] = self.mark_node(line_name, column_name)
 
-        return graph
+    def mark_node(self, begin, end):
+        # mark if the not is different
+        if not self.is_final(begin) and self.is_final(end):
+            return State.MARKED
+        if self.is_final(begin) and not self.is_final(end):
+            return State.MARKED
+        else:
+            return State.UNMARKED
 
-    def returned_path(self, graph: Graph):
-        aux_node = graph.find_node(self.target_variable)
+    def is_final(self, node_name):
+        # validate if the node is final
+        return node_name in self.final_nodes
 
-        while aux_node.name != self.initial_variable:
-            aux_node = aux_node.parent
+    def reverse_final(self):
+        # reverse the fianl states in table
+        for node in self.graph.nodes:
+            for state in self.alphabet:
+                self.consume(node, state)
 
-            print(aux_node.name)
+    def consume(self, node, state):
+        # find the consume of the state
+        for edge in node.edges:
+            if edge.info is state:
+                return edge.target
+
+        return None
 
 
 if __name__ == '__main__':
+
     # mount language rules
     language = Language()
-    language.generate_product_rules()
+    language.graph.list_edges()
 
-    # find generate sequence lenguage
-    language.generate_sequence_language()
+    language.minimization_table()
 
-    # find generate language sequence
-    mount_graph = language.generate_language_sequence()
-    print("----")
-    language.returned_path(mount_graph)

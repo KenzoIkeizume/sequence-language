@@ -1,3 +1,6 @@
+from DataStructure.edge import Edge
+
+
 class Node:
 
     def __init__(self, name: str, info: str = ""):
@@ -6,6 +9,9 @@ class Node:
         self.visited = False
         self.info = info
         self.edges = []
+
+    def add_edge(self, target, info: str):
+        self.edges.append(Edge(self, target, info))
 
     def __eq__(self, other):
         return self.name == other.name
